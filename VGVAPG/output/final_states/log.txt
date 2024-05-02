@@ -1,0 +1,10 @@
+Number of initial states: 5
+Number of final states: 10
+Timestep: 0.001 ps
+nsteps: 2000
+Saved frames (only molecule): 10
+Temperature: 300 K
+Collision rate: 1 ps-1
+Boltzmann const.: 0.008314 kJ mol-1 K-1 
+Simulation start: 2024-05-02 13:20:31
+Simulation end: 2024-05-02 13:21:02

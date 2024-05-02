@@ -1,0 +1,10 @@
+Timestep: 0.002 ps
+nsteps: 5000
+Saved frames (only molecule): 500
+Saved frames (molecule + water): 5
+nstxout: 10
+Temperature: 300 K
+Collision rate: 1 ps-1
+Boltzmann const.: 0.008314 kJ mol-1 K-1 
+Simulation start: 2024-05-02 13:20:22
+Simulation end: 2024-05-02 13:20:27
