@@ -76,7 +76,7 @@ chi_t = f_NN(Dt)
 chi_t = pt.mean( chi_t, axis=1 ).cpu().detach().numpy()
 chi_t = np.array([chi_t, 1-chi_t])
 
-rate12, rate21  = exit_rates_from_chi((frame + 1) * 100, 100 * 0.002, chi_0, chi_t)
+rate12, rate21  = exit_rates_from_chi((frame + 1) * 200, 200 * 0.001, chi_0, chi_t)
 
 rates[0,frame] = rate12
 rates[1,frame] = rate21
