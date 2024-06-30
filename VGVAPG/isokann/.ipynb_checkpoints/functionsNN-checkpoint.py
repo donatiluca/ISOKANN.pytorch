@@ -3,7 +3,10 @@ import numpy as np
 import scipy
 from scipy import stats
 
-cuda = pt.device('cuda')
+# Check if CUDA is available, otherwise use CPU
+device = pt.device("cuda" if pt.cuda.is_available() else "cpu")
+print(f"Torch is on: {device}")
+
 
 class NeuralNetwork(pt.nn.Module):
     def __init__(self, Nodes, enforce_positive=0):
@@ -60,7 +63,7 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
     # Train the model
     for epoch in range(Nepochs):
 
-        permutation = pt.randperm(X.size()[0], device=cuda)
+        permutation = pt.randperm(X.size()[0], device=device)
 
         for i in range(0, X.size()[0], batch_size):
 

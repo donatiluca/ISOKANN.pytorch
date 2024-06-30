@@ -3,7 +3,10 @@ import numpy as np
 import scipy
 from scipy import stats
 
-cuda = pt.device('cuda')
+# Check if CUDA is available, otherwise use CPU
+device = pt.device("cuda" if pt.cuda.is_available() else "cpu")
+print(f"Torch is on: {device}")
+
 
 class NeuralNetwork(pt.nn.Module):
     def __init__(self, Nodes, enforce_positive=0):
@@ -60,7 +63,7 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
     # Train the model
     for epoch in range(Nepochs):
 
-        permutation = pt.randperm(X.size()[0], device=cuda)
+        permutation = pt.randperm(X.size()[0], device=device)
 
         for i in range(0, X.size()[0], batch_size):
 
@@ -87,32 +90,4 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
     return loss_arr
 
 
-def exit_rates_from_chi(Nsteps, dt, chi, prop_chi):
-    
-    # lag time
-    tau       = Nsteps * dt
-    
-    #
-    chi1      = chi[0,:]
-    chi2      = chi[1,:]
-
-    #
-    prop_chi1 = prop_chi[0,:]
-    prop_chi2 = prop_chi[1,:]
-
-    res1 = stats.linregress(chi1, prop_chi1)
-    res2 = stats.linregress(chi2, prop_chi2)
-
-    rate1  = - 1 / tau * np.log( res1.slope ) * ( 1 + res1.intercept  / ( res1.slope - 1 ))
-    rate2  = - 1 / tau * np.log( res2.slope ) * ( 1 + res2.intercept  / ( res2.slope - 1 ))
-    
-    #
-
-    print('Exit rate 1:', rate1)
-    print('Exit rate 2:', rate2)
-
-
-    print("")
-
-    return rate1, rate2
 
