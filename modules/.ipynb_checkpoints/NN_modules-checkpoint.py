@@ -5,6 +5,9 @@ import random
 from modules.other_functions import scale_and_shift
 from sklearn.model_selection import train_test_split
 
+# Check if CUDA is available, otherwise use CPU
+device = pt.device("cuda" if pt.cuda.is_available() else "cpu")
+
 class NeuralNetwork(pt.nn.Module):
     def __init__(self, Nodes, enforce_positive=0):
         super(NeuralNetwork, self).__init__()
@@ -72,7 +75,7 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
     # Train the model
     for epoch in range(Nepochs):
 
-        permutation = pt.randperm(X_train.size()[0])
+        permutation = pt.randperm(X_train.size()[0], device=device)
 
         for i in range(0, X_train.size()[0], batch_size):
             
@@ -129,7 +132,7 @@ def random_search(X, Y, NN_layers, learning_rates, search_iterations=20):
         lr    = random.choice(learning_rates)
         nodes = np.asarray(random.choice(NN_layers))
 
-        f_NN = NeuralNetwork( Nodes = nodes, enforce_positive = 1 )
+        f_NN = NeuralNetwork( Nodes = nodes, enforce_positive = 1 ).to(device)
 
         train_losses, val_losses, val_loss = power_method(X, Y, f_NN, scale_and_shift, Niters = 100, tolerance  = 5e-3, lr = lr)
 
@@ -150,18 +153,18 @@ def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, tolerance  =
 
     for i in range(Niters):
 
-        old_chi =  f_NN(pt_x0).detach().numpy()
+        old_chi =  f_NN(pt_x0).cpu().detach().numpy()
 
         pt_chi  =  f_NN( pt_xt )
         pt_y    =  pt.mean(pt_chi, axis=1)
-        y       =  scale_and_shift(pt_y.detach().numpy())
+        y       =  scale_and_shift(pt_y.detach().cpu().detach().numpy())
         pt_y    =  pt.tensor(y, dtype=pt.float32)
         
         train_loss, val_loss, best_loss = trainNN(net = f_NN, lr = lr, wd = 1e-5, Nepochs = 10, batch_size=50, X=pt_x0, Y=pt_y)
         train_LOSS           = np.append(train_LOSS, train_loss[-1])
         val_LOSS             = np.append(val_LOSS, val_loss[-1])
 
-        new_chi   = f_NN(pt_x0).detach().numpy()
+        new_chi   = f_NN(pt_x0).cpu().detach().numpy()
 
         if np.linalg.norm(new_chi - old_chi) < tolerance:
             
