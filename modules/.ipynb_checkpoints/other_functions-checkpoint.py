@@ -7,6 +7,64 @@ from IPython.display import display
 
 x      =  sp.symbols('x')
 
+class EMIntegrator:
+    def __init__(self, 
+                 SPs,
+                 P1D,
+                 dt     = 0.001
+                ):
+        
+        """
+        ... 
+        """    
+
+        self.Ndims  = SPs.Ndims
+    
+        self.dVx    = P1D.dVx
+        
+        self.dt     = dt
+        self.sdt    = np.sqrt(dt)
+
+        self.mass   = SPs.mass
+        self.gamma  = SPs.gamma
+        self.beta   = SPs.beta
+        self.sigma  = np.sqrt( 2 / SPs.beta * SPs.gamma * SPs.mass )
+
+    def step(self, q):
+        
+        Q = np.copy(q)
+         
+        # Deterministic force
+        Fx =  - self.dVx(Q)
+
+        # Drift 
+        drift  = Fx / self.mass / self.gamma
+        
+        # Random force 
+        R  =  np.random.normal(0, 1, self.Ndims)
+
+        # update q_{n+1}
+        Q = Q + drift * self.dt + self.sigma * self.sdt * R
+        
+        return Q
+
+    def trajectory(self,                  
+                       Q0     = -1,
+                       Nsteps = 100,
+                       seed   = 0
+                  ):
+
+        np.random.seed(seed)
+
+        Q = np.empty((Nsteps, self.Ndims))
+
+        Q[0,:] = Q0
+
+        for t in tqdm(range(Nsteps-1)):
+            Q[t+1,:] = self.step(Q[t,:])
+
+        return Q
+        
 def discretize_axis(xmin, xmax, xbins):
     """
     xcenters, xedges, xbins, dx = discretize_axis(xmin, xmax, xbins)
@@ -99,7 +157,9 @@ def exit_rates_from_chi(tau, chi_0, chi_tau):
     rate2  = - 1 / tau * np.log( res2.slope ) * ( 1 + res2.intercept  / ( res2.slope - 1 ))
     
     #
-
+    print(r"$a_1 =$", res1.slope)
+    print(r"$a_2 =$", res1.intercept)
+    print(" ")
     print('Exit rate 1:', rate1)
     print('Exit rate 2:', rate2)
 

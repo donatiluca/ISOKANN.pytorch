@@ -60,10 +60,11 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
     patience_counter = 0
 
     # Split training and validation data
-    X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=0.3, random_state=42)
-
+    X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=0.2, random_state=42)
+    
     # Define the optimizer
     optimizer = pt.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
+    #optimizer = pt.optim.SGD(net.parameters(), lr=lr, weight_decay=wd, nesterov=True, momentum=0.23, dampening=0)
 
     # Define the loss function
     MSE = pt.nn.MSELoss()
@@ -83,6 +84,7 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
             optimizer.zero_grad()
             
             indices = permutation[i:i+batch_size]
+            
             batch_x, batch_y = X_train[indices], Y_train[indices]
             
             # Make a new prediction
@@ -106,6 +108,7 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
             val_losses.append(val_loss.item())
 
         # Early stopping
+        
         if val_loss < best_loss:
             best_loss = val_loss
             best_model = net.state_dict()
@@ -115,14 +118,14 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
             if patience_counter >= patience:
                 #print(f"Early stopping at epoch {epoch+1}")
                 break
-
+        
         #print(f'Epoch {epoch+1}/{Nepochs}, Training Loss: {loss.item():.4f}, Validation Loss: {val_loss.item():.4f}')
 
     return train_losses, val_losses, best_loss
 
 
 # Random search for hyperparameters
-def random_search(X, Y, NN_layers, learning_rates, search_iterations=20):
+def random_search(X, Y, NN_layers, learning_rates, batch_size=50, search_iterations=20):
 
     best_hyperparams = None
     best_val_loss = float('inf')
@@ -132,18 +135,30 @@ def random_search(X, Y, NN_layers, learning_rates, search_iterations=20):
         lr    = random.choice(learning_rates)
         nodes = np.asarray(random.choice(NN_layers))
 
-        f_NN = NeuralNetwork( Nodes = nodes, enforce_positive = 1 ).to(device)
+        f_NN = NeuralNetwork( Nodes = nodes ).to(device)
 
-        train_losses, val_losses, val_loss = power_method(X, Y, f_NN, scale_and_shift, Niters = 100, tolerance  = 5e-3, lr = lr)
+        train_losses, val_losses, val_loss = power_method(X, Y, 
+                                                          f_NN, 
+                                                          scale_and_shift, 
+                                                          Niters = 100, 
+                                                          Nepochs = 100,
+                                                          tolerance  = 5e-3, 
+                                                          batch_size=batch_size,
+                                                          lr = lr)
+
+        print("Validation loss:", val_loss)
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            
             best_hyperparams = {'nodes': nodes, 'learning_rate': lr}
+
+        del f_NN
 
     return best_hyperparams, best_val_loss
 
 
-def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, tolerance  = 5e-3, lr = 1e-3):
+def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, Nepochs = 10, tolerance  = 5e-3, batch_size = 50, lr = 1e-3, print_eta=False):
 
     """
     train_LOSS, val_LOSS, best_loss = power_method(pt_x0, pt_y, f_NN, scale_and_shift, Niters = 500, tolerance  = 5e-3)
@@ -151,21 +166,26 @@ def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, tolerance  =
     train_LOSS = np.empty(0, dtype = object)
     val_LOSS   = np.empty(0, dtype = object)
 
-    for i in range(Niters):
+    if   print_eta == False:
+        loop = range(Niters)
+    elif print_eta == True:
+        loop = tqdm(range(Niters))
+        
+    for i in loop:
 
         old_chi =  f_NN(pt_x0).cpu().detach().numpy()
 
         pt_chi  =  f_NN( pt_xt )
         pt_y    =  pt.mean(pt_chi, axis=1)
         y       =  scale_and_shift(pt_y.detach().cpu().detach().numpy())
-        pt_y    =  pt.tensor(y, dtype=pt.float32)
+        pt_y    =  pt.tensor(y, dtype=pt.float32, device = device)
         
-        train_loss, val_loss, best_loss = trainNN(net = f_NN, lr = lr, wd = 1e-5, Nepochs = 10, batch_size=50, X=pt_x0, Y=pt_y)
+        train_loss, val_loss, best_loss = trainNN(net = f_NN, lr = lr, wd = 1e-5, Nepochs = Nepochs, batch_size=batch_size, X=pt_x0, Y=pt_y)
         train_LOSS           = np.append(train_LOSS, train_loss[-1])
         val_LOSS             = np.append(val_LOSS, val_loss[-1])
 
         new_chi   = f_NN(pt_x0).cpu().detach().numpy()
-
+        #print(np.linalg.norm(new_chi - old_chi) )
         if np.linalg.norm(new_chi - old_chi) < tolerance:
             
             break
