@@ -4,7 +4,7 @@ ISOKANN is an algorithm that uses machine learning techniques to identify invari
 Here, you can find several examples of the method based on the original ISOKANN version described in Ref. [1] and summarized in Ref. [2].
 In Refs. [3,4], you can find more information and applications of ISOKANN.
 
-The code collected in this repository is intended primarily for teaching purposes. For more advanced work, we suggest using [the Julia version](https://github.com/axsk/ISOKANN.jl) developed by [Alexander Sikorski](https://www.zib.de/members/sikorski).
+The code collected in this repository is intended mainly for teaching purposes. For more advanced works, we suggest using [the Julia version](https://github.com/axsk/ISOKANN.jl) developed by [Alexander Sikorski](https://www.zib.de/members/sikorski).
 
 
 ![](theory.png)
@@ -20,4 +20,4 @@ The following notebook shows how to implement ISOKANN in a simple and effective 
 
 [3] A. Sikorski, E.R. Borrell, M. Weber; Learning Koopman eigenfunctions of stochastic diffusions with optimal importance sampling and ISOKANN. [J. Math. Phys. 65, 013502 (2024)](https://pubs.aip.org/aip/jmp/article/65/1/013502/2933145/Learning-Koopman-eigenfunctions-of-stochastic)
 
-[4] Donati L., 2024: The Kramers turnover in terms of a macro-state projection on phase space. [Mol. Phys, e2356748](https://www.tandfonline.com/doi/full/10.1080/00268976.2024.2356748?src=exp-la)
+[4] L. Donati, C. Schütte, M. Weber; The Kramers turnover in terms of a macro-state projection on phase space. [Mol. Phys, e2356748 (2024)](https://www.tandfonline.com/doi/full/10.1080/00268976.2024.2356748?src=exp-la)
