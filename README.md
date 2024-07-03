@@ -9,8 +9,6 @@ The code collected in this repository is intended mainly for teaching purposes. 
 
 ![](theory.png)
 
-The following notebook shows how to implement ISOKANN in a simple and effective manner for a one-dimensional system, and is intended for teaching purposes.
-
 ### References
 
 [1] R. J. Rabben, S. Ray, M. Weber; ISOKANN: Invariant subspaces of Koopman operators learned by a neural network.
