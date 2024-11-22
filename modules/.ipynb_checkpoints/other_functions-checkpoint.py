@@ -157,8 +157,11 @@ def exit_rates_from_chi(tau, chi_0, chi_tau):
     rate2  = - 1 / tau * np.log( res2.slope ) * ( 1 + res2.intercept  / ( res2.slope - 1 ))
     
     #
-    print(r"$a_1 =$", res1.slope)
-    print(r"$a_2 =$", res1.intercept)
+    print(r"$a_{1,1} =$", res1.slope)
+    print(r"$a_{1,2} =$", res1.intercept)
+    print(" ")
+    print(r"$a_{2,1}=$", res2.slope)
+    print(r"$a_{2,2} =$", res2.intercept)
     print(" ")
     print('Exit rate 1:', rate1)
     print('Exit rate 2:', rate2)

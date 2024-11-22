@@ -135,6 +135,9 @@ def random_search(X, Y, NN_layers, learning_rates, batch_size=50, search_iterati
         lr    = random.choice(learning_rates)
         nodes = np.asarray(random.choice(NN_layers))
 
+        print("Testing learning rate =", lr)
+        print("Testing layers =", nodes)
+
         f_NN = NeuralNetwork( Nodes = nodes ).to(device)
 
         train_losses, val_losses, val_loss = power_method(X, Y, 
@@ -180,9 +183,9 @@ def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, Nepochs = 10
         y       =  scale_and_shift(pt_y.detach().cpu().detach().numpy())
         pt_y    =  pt.tensor(y, dtype=pt.float32, device = device)
         
-        train_loss, val_loss, best_loss = trainNN(net = f_NN, lr = lr, wd = 1e-5, Nepochs = Nepochs, batch_size=batch_size, X=pt_x0, Y=pt_y)
-        train_LOSS           = np.append(train_LOSS, train_loss[-1])
-        val_LOSS             = np.append(val_LOSS, val_loss[-1])
+        train_loss, val_loss, best_loss = trainNN(net = f_NN, lr = lr, wd = lr, Nepochs = Nepochs, batch_size=batch_size, X=pt_x0, Y=pt_y)
+        train_LOSS           = np.append(train_LOSS, train_loss[-1]) #[-1]
+        val_LOSS             = np.append(val_LOSS, val_loss[-1])     # [-1]
 
         new_chi   = f_NN(pt_x0).cpu().detach().numpy()
         #print(np.linalg.norm(new_chi - old_chi) )

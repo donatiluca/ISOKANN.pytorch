@@ -50,7 +50,7 @@ class NeuralNetwork(pt.nn.Module):
 
         return X.squeeze()
 
-def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
+def trainNN(net, lr, wd, Nepochs, batch_size, X, Y, test_size = 0.2):
 
     # Early stopping parameters
     # Stop training if this metric no longer improves after a certain number of epochs (patience).
@@ -60,7 +60,7 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
     patience_counter = 0
 
     # Split training and validation data
-    X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=0.2, random_state=42)
+    X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=test_size, random_state=42)
     
     # Define the optimizer
     optimizer = pt.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
@@ -125,7 +125,7 @@ def trainNN(net, lr, wd, Nepochs, batch_size, X, Y):
 
 
 # Random search for hyperparameters
-def random_search(X, Y, NN_layers, learning_rates, batch_size=50, search_iterations=20):
+def random_search(X, Y, NN_layers, learning_rates, weight_decays, batch_size=50, search_iterations=20, test_size=0.2):
 
     best_hyperparams = None
     best_val_loss = float('inf')
@@ -134,6 +134,11 @@ def random_search(X, Y, NN_layers, learning_rates, batch_size=50, search_iterati
 
         lr    = random.choice(learning_rates)
         nodes = np.asarray(random.choice(NN_layers))
+        wd    = random.choice(weight_decays)
+
+        print("Testing learning rate =", lr)
+        print("Testing weight decay =", wd)
+        print("Testing layers =", nodes)
 
         f_NN = NeuralNetwork( Nodes = nodes ).to(device)
 
@@ -144,21 +149,26 @@ def random_search(X, Y, NN_layers, learning_rates, batch_size=50, search_iterati
                                                           Nepochs = 100,
                                                           tolerance  = 5e-3, 
                                                           batch_size=batch_size,
-                                                          lr = lr)
+                                                          lr = lr,
+                                                          wd = wd,
+                                                          test_size = test_size)
 
         print("Validation loss:", val_loss)
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             
-            best_hyperparams = {'nodes': nodes, 'learning_rate': lr}
+            best_hyperparams = {'nodes': nodes, 'learning_rate': lr, 'weight_decay': wd}
 
         del f_NN
 
     return best_hyperparams, best_val_loss
 
 
-def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, Nepochs = 10, tolerance  = 5e-3, batch_size = 50, lr = 1e-3, print_eta=False):
+def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, Nepochs = 10, tolerance  = 5e-3, batch_size = 50, 
+                        lr = 1e-3, print_eta=False,
+                        wd = 0,
+                        test_size = 0.2):
 
     """
     train_LOSS, val_LOSS, best_loss = power_method(pt_x0, pt_y, f_NN, scale_and_shift, Niters = 500, tolerance  = 5e-3)
@@ -180,9 +190,11 @@ def power_method(pt_x0, pt_xt, f_NN, scale_and_shift, Niters = 500, Nepochs = 10
         y       =  scale_and_shift(pt_y.detach().cpu().detach().numpy())
         pt_y    =  pt.tensor(y, dtype=pt.float32, device = device)
         
-        train_loss, val_loss, best_loss = trainNN(net = f_NN, lr = lr, wd = 1e-5, Nepochs = Nepochs, batch_size=batch_size, X=pt_x0, Y=pt_y)
-        train_LOSS           = np.append(train_LOSS, train_loss[-1])
-        val_LOSS             = np.append(val_LOSS, val_loss[-1])
+        train_loss, val_loss, best_loss = trainNN(net = f_NN, lr = lr, wd = wd, Nepochs = Nepochs, 
+                                                    batch_size=batch_size, X=pt_x0, Y=pt_y,
+                                                    test_size = test_size)
+        train_LOSS           = np.append(train_LOSS, train_loss[-1]) #[-1]
+        val_LOSS             = np.append(val_LOSS, val_loss[-1])     # [-1]
 
         new_chi   = f_NN(pt_x0).cpu().detach().numpy()
         #print(np.linalg.norm(new_chi - old_chi) )
